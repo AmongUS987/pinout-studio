@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: ["main", "master"] # To obsłuży i main i master
+    branches: ["main", "master"]
   workflow_dispatch:
 
 permissions:
@@ -26,10 +26,10 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22 # Zmieniono na aktualnie preferowaną 22
+          # Usunąłem opcję "cache: 'npm'" - to ona powodowała błąd braku pliku lock
       - name: Install dependencies
-        run: npm install # Zmieniono na install, by uniknąć problemów z plikiem lock
+        run: npm install # Standardowa instalacja pakietów
       - name: Build
         run: npm run build
       - name: Setup Pages
