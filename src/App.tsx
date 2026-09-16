@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Download, Plus, Trash2, Settings2, Tag } from 'lucide-react';
+import { Download, Plus, Trash2, Settings2, Tag, Save, FolderOpen } from 'lucide-react';
 
 type NumberingStyle = 'bottom-up' | 'top-down';
 type TitlePosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
@@ -38,6 +38,7 @@ const PRESET_COLORS = [
 
 export default function App() {
   const svgRef = useRef<SVGSVGElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [config, setConfig] = useState<Config>({
     title: "PEUGEOT 307\n2006-2013 CLUSTER\nPINOUT",
@@ -116,6 +117,42 @@ export default function App() {
     img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
   };
 
+  const saveProject = () => {
+    const projectData = {
+      config,
+      labels,
+      canvasBg
+    };
+    const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const downloadLink = document.createElement("a");
+    downloadLink.href = url;
+    downloadLink.download = "pinout-project.json";
+    downloadLink.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const result = e.target?.result as string;
+        const projectData = JSON.parse(result);
+        
+        if (projectData.config) setConfig(projectData.config);
+        if (projectData.labels) setLabels(projectData.labels);
+        if (projectData.canvasBg) setCanvasBg(projectData.canvasBg);
+      } catch (err) {
+        alert("Failed to load project file. It might be corrupted or in an invalid format.");
+      }
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const addLabel = () => {
     const newId = Math.random().toString(36).substr(2, 9);
     setLabels([...labels, {
@@ -148,18 +185,42 @@ export default function App() {
   return (
     <div className="flex h-screen bg-[#0A0A0A] text-neutral-200 font-sans overflow-hidden">
       {/* Sidebar Controls */}
-      <div className="w-[420px] bg-[#0E0E0E] border-r border-neutral-800 flex flex-col h-full shadow-lg z-10">
+      <div className="w-[420px] bg-[#0E0E0E] border-r border-neutral-800 flex flex-col h-full shadow-lg z-10 flex-shrink-0">
         <div className="p-4 border-b border-neutral-800 bg-[#111111] flex justify-between items-center">
           <div>
             <h1 className="text-xl font-semibold tracking-tight">Pinout Generator</h1>
             <p className="text-xs text-neutral-500">Create automotive cluster diagrams</p>
           </div>
-          <button 
-            onClick={exportImage} 
-            className="px-4 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-500 flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
-          >
-            <Download size={16} /> Export PNG
-          </button>
+          <div className="flex gap-2">
+            <input 
+              type="file" 
+              accept=".json" 
+              ref={fileInputRef} 
+              onChange={handleFileUpload} 
+              className="hidden" 
+            />
+            <button 
+              onClick={() => fileInputRef.current?.click()} 
+              title="Load Project"
+              className="p-1.5 bg-neutral-800 text-neutral-300 rounded-md hover:bg-neutral-700 transition-colors shadow-sm"
+            >
+              <FolderOpen size={16} />
+            </button>
+            <button 
+              onClick={saveProject} 
+              title="Save Project"
+              className="p-1.5 bg-neutral-800 text-neutral-300 rounded-md hover:bg-neutral-700 transition-colors shadow-sm"
+            >
+              <Save size={16} />
+            </button>
+            <button 
+              onClick={exportImage} 
+              title="Export PNG"
+              className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-500 flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
+            >
+              <Download size={16} /> PNG
+            </button>
+          </div>
         </div>
         
         <div className="flex-1 overflow-y-auto p-5 space-y-8 pb-20">
@@ -364,6 +425,7 @@ export default function App() {
             height="600"
             viewBox="-400 -300 800 600"
             className={`${canvasBg === 'black' ? 'bg-[#0f0f0f]' : 'bg-white'} shadow-[0_0_50px_rgba(59,130,246,0.15)] rounded-xl w-full max-w-[800px] h-auto aspect-[4/3] flex-shrink-0 border-2 border-blue-500/30 transition-colors duration-300`}
+            style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}
           >
             {/* Background */}
             <rect x="-400" y="-300" width="800" height="600" fill={canvasBg === 'black' ? '#0f0f0f' : '#ffffff'} />
