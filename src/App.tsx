@@ -13,6 +13,7 @@ interface Config {
   pinPitch: number;
   pinSize: number;
   numbering: NumberingStyle;
+  connectorColor?: string;
 }
 
 interface PinLabel {
@@ -292,6 +293,39 @@ export default function App() {
                   >Light</button>
                 </div>
               </div>
+
+              <div>
+                <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1">Connector Color</label>
+                <div className="flex gap-1.5 flex-wrap items-center">
+                  {[
+                    '#9ca3af', // Default Gray
+                    '#262626', // Dark
+                    '#ef4444', // Red
+                    '#3b82f6', // Blue
+                    '#eab308', // Yellow
+                    '#10b981', // Green
+                  ].map(color => (
+                    <button
+                      key={color}
+                      onClick={() => setConfig({...config, connectorColor: color})}
+                      className={`w-6 h-6 rounded-full border-2 transition-transform ${config.connectorColor === color ? 'border-neutral-300 scale-110 shadow-sm' : 'border-neutral-800 hover:scale-110'}`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                  <div className="h-6 w-px bg-neutral-800 mx-1"></div>
+                  <input 
+                    type="color" 
+                    value={config.connectorColor || (canvasBg === 'black' ? '#262626' : '#9ca3af')} 
+                    onChange={e => setConfig({...config, connectorColor: e.target.value})}
+                    className="w-7 h-7 p-0 border-0 rounded cursor-pointer overflow-hidden bg-transparent"
+                    title="Custom Color"
+                  />
+                  <button 
+                    onClick={() => setConfig({...config, connectorColor: undefined})}
+                    className="ml-2 text-[10px] text-neutral-500 hover:text-neutral-300 uppercase tracking-wider font-bold"
+                  >Reset</button>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -435,7 +469,7 @@ export default function App() {
               {/* Outer shell (grey housing) */}
               <path 
                 d={drawOuterShell(outerW, outerH)} 
-                fill={canvasBg === 'black' ? "#262626" : "#9ca3af"} 
+                fill={config.connectorColor || (canvasBg === 'black' ? "#262626" : "#9ca3af")} 
                 stroke={canvasBg === 'black' ? "#404040" : "#4b5563"} 
                 strokeWidth={3} 
                 strokeLinejoin="round" 
